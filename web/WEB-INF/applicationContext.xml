@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/aop
+   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+   http://www.springframework.org/schema/tx
+   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+   <bean name="productActionBean" scope="prototype" class="com.alpha.action.ProductAction">
+       <property name="productService" ref="productServiceImpl"/>
+   </bean>
+   <bean name="productServiceImpl" class="com.alpha.service.impl.ProductServiceImpl">
+       <property name="productDAO" ref="productDAOImpl"/>
+   </bean>
+   <bean name="productDAOImpl" class="com.alpha.dao.impl.ProductDAOImpl">
+        <property name="sessionFactory" ref="sf"/>
+   </bean>
+    <bean name="sf"
+          class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+        <property name="dataSource" ref="ds"/>
+        <property name="mappingResources">
+            <list>
+                <value>com/alpha/pojo/Product.hbm.xml</value>
+            </list>
+        </property>
+        <property name="schemaUpdate">
+            <value>true</value>
+        </property>
+        <property name="hibernateProperties">
+            <value>
+                hibernate.dialect=org.hibernate.dialect.MySQLDialect
+                hibernate.show_sql=true
+                hbm2ddl.auto=update
+            </value>
+        </property>
+    </bean>
+    <bean name="ds"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/ssh?characterEncoding=UTF-8"/>
+        <property name="username" value="root"/>
+        <property name="password" value="alpha"/>
+    </bean>
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sf"/>
+    </bean>
+
+    <tx:advice id="txadvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="add*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="del*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="edit*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="list*" propagation="REQUIRED" rollback-for="Exception"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="serviceMethod" expression="execution(* com.alpha.service.*.*(..))"/>
+        <aop:advisor advice-ref="txadvice" pointcut-ref="serviceMethod"/>
+    </aop:config>
+</beans>
