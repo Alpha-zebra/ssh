@@ -18,7 +18,7 @@ public class ProductAction {
     }
     public String delete(){
 //        如何接受传递过来的值;
-//        product=
+//        product
         products.remove(product);
         productService.delete(product);
         return "list";
